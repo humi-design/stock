@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Settings · HUMISENSE{% endblock %}
+{% block content %}
+<div class="max-w-3xl mx-auto">
+  <div class="mb-6">
+    <h1 class="text-2xl font-extrabold tracking-tight">Settings</h1>
+    <p class="text-sm text-slate-500">AI provider configuration. The demo runs offline on Demo AI by default.</p>
+  </div>
+
+  <div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm p-6 mb-6">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="font-bold">AI Provider</h2>
+      <span id="current-pill" class="inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full border border-amber-300/60 bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30">
+        {{ '● DEMO AI' if provider == 'mock' else '● LIVE AI' }}
+      </span>
+    </div>
+
+    <form method="post" action="{{ url_for('settings_save') }}" class="space-y-4">
+      <div>
+        <label class="field-label">Provider name</label>
+        <select name="ai_provider" id="ai-provider" class="input">
+          <option value="mock" {% if provider == 'mock' %}selected{% endif %}>Demo AI (Mock)</option>
+          <option value="openai_compatible" {% if provider == 'openai_compatible' %}selected{% endif %}>OpenAI-compatible API</option>
+          <option value="gemini" {% if provider == 'gemini' %}selected{% endif %}>Google Gemini</option>
+        </select>
+      </div>
+      <div>
+        <label class="field-label">Base URL <span class="text-slate-400 font-normal">(OpenAI-compatible only)</span></label>
+        <input name="ai_base_url" class="input" placeholder="https://api.openai.com/v1" value="{{ base_url }}">
+      </div>
+      <div>
+        <label class="field-label">Model</label>
+        <input name="ai_model" class="input" placeholder="model-name" value="{{ model }}">
+      </div>
+      <div>
+        <label class="field-label">API Key</label>
+        <input name="ai_api_key" type="password" class="input" placeholder="{{ api_key or '••••••••' }}" value="">
+        <p class="text-[11px] text-slate-400 mt-1">Stored API keys are never displayed in full. Leave blank to keep the current key.</p>
+      </div>
+      <div class="flex items-center gap-3 pt-2">
+        <button type="submit" class="btn-primary"><i data-lucide="save" class="lucide w-4 h-4"></i> Save</button>
+        <button type="button" id="btn-test-conn" class="btn-secondary"><i data-lucide="plug" class="lucide w-4 h-4"></i> Test Connection</button>
+      </div>
+      <div id="conn-result" class="text-sm font-semibold hidden"></div>
+    </form>
+  </div>
+
+  <div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm p-6 text-sm text-slate-500">
+    <div class="font-bold text-slate-700 dark:text-slate-200 mb-2">Notes</div>
+    <ul class="space-y-1.5 list-disc pl-5">
+      <li>If a live AI provider fails, the demo automatically falls back to Demo AI so the presentation never breaks.</li>
+      <li>Dummy / demo AI results are derived from your actual reconciliation data — no fake requests are shown.</li>
+      <li>API keys are never logged and never rendered in full.</li>
+    </ul>
+  </div>
+</div>
+{% endblock %}

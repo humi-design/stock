@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% block title %}Control Center · HUMISENSE{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between mb-6 flex-wrap gap-3">
+  <div>
+    <h1 class="text-2xl font-extrabold tracking-tight">AI Operations Control Center</h1>
+    <p class="text-sm text-slate-500">Reconciliation &amp; exception resolution — live demo</p>
+  </div>
+  <div class="flex items-center gap-2">
+    <button id="btn-reset" class="btn-ghost"><i data-lucide="rotate-ccw" class="lucide w-4 h-4"></i> Reset Demo</button>
+  </div>
+</div>
+
+<div id="demo-wizard-host"></div>
+
+<div id="recon-runner" class="hidden mb-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm">
+  <h3 class="font-bold mb-4 flex items-center gap-2"><i data-lucide="loader" class="lucide w-5 h-5 animate-spin"></i> Running Reconciliation</h3>
+  <div id="recon-steps" class="space-y-2 text-sm font-medium"></div>
+</div>
+
+<!-- Stats -->
+<div id="stats-grid" class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
+  <div class="stat-tile"><div class="stat-label">Records Processed</div><div class="stat-value" id="st-processed">{{ summary.processed if summary else '—' }}</div></div>
+  <div class="stat-tile"><div class="stat-label">Matched</div><div class="stat-value text-emerald-600 dark:text-emerald-400" id="st-matched">{{ summary.matched if summary else '—' }}</div></div>
+  <div class="stat-tile"><div class="stat-label">Exceptions</div><div class="stat-value text-rose-600 dark:text-rose-400" id="st-exceptions">{{ summary['exceptions'] if summary else '—' }}</div></div>
+  <div class="stat-tile"><div class="stat-label">Investigated</div><div class="stat-value text-indigo-600 dark:text-indigo-400">{{ estimate.investigated }}</div></div>
+  <div class="stat-tile"><div class="stat-label">Awaiting Approval</div><div class="stat-value text-amber-600 dark:text-amber-400">{{ estimate.awaiting_approval }}</div></div>
+  <div class="stat-tile"><div class="stat-label">Critical</div><div class="stat-value text-rose-600 dark:text-rose-400">{{ estimate.critical }}</div></div>
+</div>
+
+<!-- Capacity row -->
+<div class="grid md:grid-cols-2 gap-4 mb-8">
+  <div class="stat-tile flex items-center justify-between">
+    <div><div class="stat-label">Potential Human Hours Saved</div><div class="stat-value">{{ estimate.hours_saved }} hrs</div></div>
+    <i data-lucide="clock" class="lucide w-8 h-8 text-indigo-500/60"></i>
+  </div>
+  <div class="stat-tile flex items-center justify-between">
+    <div><div class="stat-label">Estimated Operational Capacity</div><div class="stat-value text-emerald-600 dark:text-emerald-400">{{ estimate.capacity_inr|inr }}</div></div>
+    <i data-lucide="trending-up" class="lucide w-8 h-8 text-emerald-500/60"></i>
+  </div>
+</div>
+
+<div class="flex items-center gap-2 text-[11px] font-semibold text-slate-400 mb-8">
+  <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-amber-300/60 bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30">
+    <i data-lucide="info" class="lucide w-3.5 h-3.5"></i> DEMO ESTIMATE
+  </span>
+  <span>All figures are synthetic and directional.</span>
+</div>
+
+<!-- Quick actions -->
+<div class="grid md:grid-cols-3 gap-4 mb-8">
+  <a href="{{ url_for('exceptions') }}" class="action-card">
+    <div class="action-icon bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400"><i data-lucide="list-checks" class="lucide w-6 h-6"></i></div>
+    <div>
+      <div class="font-bold">View Exceptions</div>
+      <div class="text-sm text-slate-500">{{ summary['exceptions'] if summary else '326' }} cases in queue</div>
+    </div>
+    <i data-lucide="arrow-right" class="lucide w-4 h-4 text-slate-400"></i>
+  </a>
+  <a href="{{ url_for('case_detail', case_ref='CASE #82931') }}" class="action-card">
+    <div class="action-icon bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400"><i data-lucide="flask-conical" class="lucide w-6 h-6"></i></div>
+    <div>
+      <div class="font-bold">Hero Case #82931</div>
+      <div class="text-sm text-slate-500">₹184,500 settlement exception</div>
+    </div>
+    <i data-lucide="arrow-right" class="lucide w-4 h-4 text-slate-400"></i>
+  </a>
+  <a href="{{ url_for('roi') }}" class="action-card">
+    <div class="action-icon bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"><i data-lucide="calculator" class="lucide w-6 h-6"></i></div>
+    <div>
+      <div class="font-bold">ROI Calculator</div>
+      <div class="text-sm text-slate-500">Estimate capacity released</div>
+    </div>
+    <i data-lucide="arrow-right" class="lucide w-4 h-4 text-slate-400"></i>
+  </a>
+</div>
+
+<!-- Reconciliation panel -->
+<section class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm p-6">
+  <div class="flex items-center justify-between mb-5 flex-wrap gap-3">
+    <div>
+      <h2 class="text-lg font-bold">Reconciliation</h2>
+      <p class="text-sm text-slate-500">Compare financial records across systems and automatically identify exceptions.</p>
+    </div>
+    <button id="btn-run-recon" class="btn-primary"><i data-lucide="play" class="lucide w-4 h-4"></i> Run Reconciliation</button>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+    <div class="source-card">
+      <div class="flex justify-between items-start">
+        <div>
+          <div class="font-bold">Bank Transactions</div>
+          <div class="text-sm text-slate-500">{{ summary.bank_count if summary else '12,842' }} records</div>
+        </div>
+        <span class="badge badge-neutral">CSV</span>
+      </div>
+      <label class="upload-btn mt-3"><i data-lucide="upload" class="lucide w-4 h-4"></i> Upload Bank CSV<input type="file" class="hidden" name="bank" accept=".csv,.xlsx" data-upload="bank"></label>
+    </div>
+    <div class="source-card">
+      <div class="flex justify-between items-start">
+        <div>
+          <div class="font-bold">Broker Ledger</div>
+          <div class="text-sm text-slate-500">{{ summary.broker_count if summary else '12,831' }} records</div>
+        </div>
+        <span class="badge badge-neutral">CSV</span>
+      </div>
+      <label class="upload-btn mt-3"><i data-lucide="upload" class="lucide w-4 h-4"></i> Upload Broker CSV<input type="file" class="hidden" name="broker" accept=".csv,.xlsx" data-upload="broker"></label>
+    </div>
+    <div class="source-card">
+      <div class="flex justify-between items-start">
+        <div>
+          <div class="font-bold">Settlement</div>
+          <div class="text-sm text-slate-500">{{ summary.settlement_count if summary else '12,796' }} records</div>
+        </div>
+        <span class="badge badge-neutral">CSV</span>
+      </div>
+      <label class="upload-btn mt-3"><i data-lucide="upload" class="lucide w-4 h-4"></i> Upload Settlement CSV<input type="file" class="hidden" name="settlement" accept=".csv,.xlsx" data-upload="settlement"></label>
+    </div>
+  </div>
+
+  <div class="flex items-center gap-3">
+    <button id="btn-use-demo" class="btn-secondary"><i data-lucide="database" class="lucide w-4 h-4"></i> Use Demo Data</button>
+    <span class="text-xs text-slate-400">Accepts CSV or XLSX · 12,842 bank records bundled</span>
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}
+<script>
+  const HERO_CASE_REF = 'CASE #82931';
+</script>
+{% endblock %}

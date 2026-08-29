@@ -1,0 +1,221 @@
+{% extends "base.html" %}
+{% block title %}{{ case.case_ref }} · HUMISENSE{% endblock %}
+{% block content %}
+<div class="mb-6">
+  <a href="{{ url_for('exceptions') }}" class="text-sm font-semibold text-slate-500 hover:text-indigo-600 inline-flex items-center gap-1.5">
+    <i data-lucide="arrow-left" class="lucide w-4 h-4"></i> Back to Exceptions
+  </a>
+</div>
+
+<!-- Case header -->
+<section class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm p-6 mb-6">
+  <div class="flex items-start justify-between flex-wrap gap-4">
+    <div>
+      <div class="flex items-center gap-3 flex-wrap">
+        <h1 class="text-2xl font-extrabold font-mono tracking-tight">{{ case.case_ref }}</h1>
+        <span class="badge {{ severity_badge_cls(case.severity) }}">{{ case.severity }} PRIORITY</span>
+        <span class="badge {{ status_cls(case.status) }}" id="case-status-badge">{{ case.status }}</span>
+      </div>
+      <div class="mt-2 flex items-center gap-2 text-slate-500">
+        <span class="font-semibold text-slate-700 dark:text-slate-200">{{ reconciliation_label(case.case_type) }}</span>
+        <span class="text-slate-300">·</span>
+        <span class="text-lg font-extrabold text-slate-800 dark:text-white">{{ case.amount|money }}</span>
+      </div>
+    </div>
+    <div class="text-right">
+      <div class="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">Reference</div>
+      <div class="font-mono font-bold text-slate-700 dark:text-slate-200">{{ case.reference }}</div>
+    </div>
+  </div>
+
+  <div class="mt-5 flex items-center gap-2 text-xs font-semibold" id="case-status-line">
+    {% if case.status in ('Resolved','Rejected','Escalated') %}
+    <span class="inline-flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400"><i data-lucide="circle-check" class="lucide w-4 h-4"></i> CLOSED</span>
+    {% elif case.status in ('Investigated','Awaiting Approval','Pending Approval') %}
+    <span class="inline-flex items-center gap-1.5 text-amber-600 dark:text-amber-400"><i data-lucide="clock" class="lucide w-4 h-4"></i> WAITING FOR AI INVESTIGATION</span>
+    {% else %}
+    <span class="inline-flex items-center gap-1.5 text-indigo-600 dark:text-indigo-400"><i data-lucide="bot" class="lucide w-4 h-4"></i> NEW CASE</span>
+    {% endif %}
+  </div>
+</section>
+
+<!-- Tabs -->
+<div id="case-tabs" class="flex items-center gap-1 border-b border-slate-200 dark:border-slate-800 mb-6 overflow-x-auto">
+  {% set tabs = [('overview','Overview'),('investigation','Investigation'),('evidence','Evidence'),('resolution','Resolution'),('audit','Audit Trail')] %}
+  {% for tid, label in tabs %}
+  <button class="case-tab {% if loop.first %}active{% endif %}" data-tab="{{ tid }}">{{ label }}</button>
+  {% endfor %}
+</div>
+
+<!-- OVERVIEW -->
+<div class="tab-panel" data-panel="overview">
+  <div class="grid md:grid-cols-3 gap-4">
+    <div class="stat-tile"><div class="stat-label">Case Type</div><div class="stat-value text-base">{{ reconciliation_label(case.case_type) }}</div></div>
+    <div class="stat-tile"><div class="stat-label">Reference</div><div class="stat-value text-base font-mono">{{ case.reference }}</div></div>
+    <div class="stat-tile"><div class="stat-label">Amount</div><div class="stat-value text-base">{{ case.amount|money }}</div></div>
+    <div class="stat-tile"><div class="stat-label">Currency</div><div class="stat-value text-base">{{ case.currency }}</div></div>
+    <div class="stat-tile"><div class="stat-label">Severity</div><div class="stat-value text-base"><span class="badge {{ severity_badge_cls(case.severity) }}">{{ case.severity }}</span></div></div>
+    <div class="stat-tile"><div class="stat-label">Status</div><div class="stat-value text-base"><span class="badge {{ status_cls(case.status) }}">{{ case.status }}</span></div></div>
+  </div>
+  <div class="mt-6 rounded-xl border border-amber-200/70 dark:border-amber-500/20 bg-amber-50/70 dark:bg-amber-500/5 text-amber-800 dark:text-amber-200 p-4 text-sm">
+    <div class="font-bold mb-1 flex items-center gap-2"><i data-lucide="info" class="lucide w-4 h-4"></i> Next step</div>
+    {% if case.status == 'Resolved' %}
+    This case is resolved and fully audited. View the ROI impact below.
+    {% elif case.status == 'Investigated' %}
+    Humisense has completed its investigation. Review the recommendation and approve, reject or escalate.
+    {% else %}
+    Run the Humisense investigation to collect evidence, determine the probable root cause and prepare a resolution.
+    {% endif %}
+  </div>
+</div>
+
+<!-- INVESTIGATION -->
+<div class="tab-panel hidden" data-panel="investigation">
+  <div id="investigate-empty" class="text-center py-16">
+    <div class="mx-auto mb-4 h-16 w-16 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+      <i data-lucide="bot" class="lucide w-8 h-8"></i>
+    </div>
+    <h3 class="font-bold text-lg">Humisense Investigation</h3>
+    <p class="text-sm text-slate-500 max-w-md mx-auto mt-1">Humisense will check the bank, settlement and broker records, compare them, find supporting evidence and determine the probable root cause.</p>
+    <button id="btn-investigate" class="btn-primary mt-6"><i data-lucide="search" class="lucide w-4 h-4"></i> Investigate with Humisense</button>
+  </div>
+
+  <div id="investigate-running" class="hidden mb-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm">
+    <h3 class="font-bold mb-4 flex items-center gap-2"><i data-lucide="bot" class="lucide w-5 h-5 text-indigo-600 animate-pulse"></i> Humisense is investigating…</h3>
+    <div id="investigate-steps" class="space-y-2 text-sm font-medium"></div>
+  </div>
+
+  <div id="investigate-result" class="hidden space-y-4">
+    <div class="grid md:grid-cols-2 gap-4">
+      <div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm">
+        <h4 class="text-sm font-extrabold uppercase tracking-wider text-slate-400 mb-2 flex items-center gap-2"><i data-lucide="help-circle" class="lucide w-4 h-4"></i> What Happened?</h4>
+        <p class="text-slate-700 dark:text-slate-200 font-medium" id="invest-what">{{ investigation.what_happened if investigation else '' }}</p>
+      </div>
+      <div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm">
+        <h4 class="text-sm font-extrabold uppercase tracking-wider text-slate-400 mb-2 flex items-center gap-2"><i data-lucide="search" class="lucide w-4 h-4"></i> Probable Root Cause</h4>
+        <p class="text-slate-700 dark:text-slate-200 font-medium" id="invest-cause">{{ investigation.root_cause if investigation else '' }}</p>
+      </div>
+    </div>
+
+    <div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm">
+      <h4 class="text-sm font-extrabold uppercase tracking-wider text-slate-400 mb-3 flex items-center gap-2"><i data-lucide="brain" class="lucide w-4 h-4"></i> Why Humisense reached this conclusion</h4>
+      <div id="invest-rationale" class="flex flex-wrap gap-2 text-sm font-semibold text-slate-600 dark:text-slate-300 mb-4">{{ (investigation.rationale if investigation else '')|safe }}</div>
+      <div class="flex items-center gap-4 flex-wrap">
+        <div>
+          <div class="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">AI Confidence</div>
+          <div class="flex items-center gap-2">
+            <div class="w-40 h-2 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden"><div id="conf-bar" class="h-full rounded-full bg-gradient-to-r from-indigo-500 to-emerald-500" style="width:{{ (investigation.confidence if investigation else 0)|int }}%"></div></div>
+            <span id="conf-value" class="text-xl font-extrabold text-indigo-600 dark:text-indigo-400">{{ investigation.confidence|int if investigation else 0 }}%</span>
+          </div>
+        </div>
+        <span class="badge badge-info" id="provider-tag">{{ 'LIVE AI' if investigation and investigation.provider=='live' else 'DEMO AI' }}</span>
+        {% if investigation and investigation.fallback %}<span class="badge badge-warn">Live AI unavailable — switched to Demo AI</span>{% endif %}
+      </div>
+      <p class="text-[11px] text-slate-400 mt-3">Decision rationale is limited to evidence and conclusion. Chain-of-thought is never exposed.</p>
+    </div>
+  </div>
+</div>
+
+<!-- EVIDENCE -->
+<div class="tab-panel hidden" data-panel="evidence">
+  <div class="grid lg:grid-cols-3 gap-4" id="evidence-grid">
+    <div class="evidence-card" data-source="bank">
+      <div class="evidence-head"><span class="evidence-id">EVIDENCE 01</span><i data-lucide="landmark" class="lucide w-5 h-5"></i></div>
+      <div class="font-bold mb-3">BANK TRANSACTIONS</div>
+      <div class="space-y-2 text-sm">
+        <div class="flex justify-between"><span class="text-slate-400">Reference</span><span class="font-mono font-semibold">{{ (case.evidence.bank.txn_id if case.evidence.bank else case.reference)|default(case.reference) }}</span></div>
+        <div class="flex justify-between"><span class="text-slate-400">Amount</span><span class="font-bold">{{ (case.evidence.bank.amount if case.evidence.bank else case.amount)|money }}</span></div>
+        <div class="flex justify-between"><span class="text-slate-400">Status</span><span class="badge badge-success">{{ case.evidence.bank.status if case.evidence.bank else 'SETTLED' }}</span></div>
+      </div>
+    </div>
+    <div class="evidence-card" data-source="settlement">
+      <div class="evidence-head"><span class="evidence-id">EVIDENCE 02</span><i data-lucide="wallet" class="lucide w-5 h-5"></i></div>
+      <div class="font-bold mb-3">SETTLEMENT</div>
+      <div class="space-y-2 text-sm">
+        <div class="flex justify-between"><span class="text-slate-400">Settlement</span><span class="font-mono font-semibold">{{ case.evidence.settlement.txn_id if case.evidence.settlement else '' }}</span></div>
+        <div class="flex justify-between"><span class="text-slate-400">Amount</span><span class="font-bold">{{ (case.evidence.settlement.amount if case.evidence.settlement else case.amount)|money }}</span></div>
+        <div class="flex justify-between"><span class="text-slate-400">Status</span><span class="badge badge-success">{{ case.evidence.settlement.status if case.evidence.settlement else 'RECEIVED' }}</span></div>
+      </div>
+    </div>
+    <div class="evidence-card evidence-alert" data-source="broker">
+      <div class="evidence-head"><span class="evidence-id">EVIDENCE 03</span><i data-lucide="book-open" class="lucide w-5 h-5"></i></div>
+      <div class="font-bold mb-3">BROKER LEDGER <span class="badge badge-high ml-1">DISCREPANCY</span></div>
+      <div class="space-y-2 text-sm">
+        <div class="flex justify-between"><span class="text-slate-400">Reference</span><span class="font-mono font-semibold">{{ (case.evidence.broker.txn_id if case.evidence.broker else case.reference)|default(case.reference) }}</span></div>
+        <div class="flex justify-between"><span class="text-slate-400">Amount</span><span class="font-bold text-rose-600 dark:text-rose-400">{{ (case.evidence.broker.amount if case.evidence.broker else 0)|money }}</span></div>
+        <div class="flex justify-between"><span class="text-slate-400">Status</span><span class="badge badge-warn">{{ case.evidence.broker.status if case.evidence.broker else 'PENDING' }}</span></div>
+      </div>
+      <div class="mt-4 pt-3 border-t border-rose-100 dark:border-rose-500/20 text-xs font-bold text-rose-600 dark:text-rose-400 flex items-center gap-1.5"><i data-lucide="alert-triangle" class="lucide w-4 h-4"></i> Ledger entry not posted</div>
+    </div>
+  </div>
+</div>
+
+<!-- RESOLUTION -->
+<div class="tab-panel hidden" data-panel="resolution">
+  <div id="resolution-empty" class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm">
+    <h3 class="font-extrabold text-lg mb-1">Recommended Resolution</h3>
+    <p class="text-sm text-slate-500 mb-4">Prepared by Humisense after investigation. High-risk actions require human approval.</p>
+    <div class="rounded-xl bg-slate-50 dark:bg-slate-800/60 p-4 mb-4 text-slate-700 dark:text-slate-200 font-medium" id="rec-text">{{ case.recommendation if case.recommendation else 'Run the investigation first to generate a recommendation.' }}</div>
+    <div class="grid grid-cols-3 gap-3 max-w-md">
+      <div><div class="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">Risk</div><div class="font-bold"><span class="badge {{ severity_badge_cls(case.severity) }}">{{ case.severity }}</span></div></div>
+      <div><div class="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">Amount</div><div class="font-bold">{{ case.amount|money }}</div></div>
+      <div><div class="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">Approval</div><div class="font-bold"><span class="badge badge-warn">REQUIRED</span></div></div>
+    </div>
+    <div class="mt-6 flex items-center gap-2 flex-wrap" id="resolution-actions">
+      {% if case.status == 'Resolved' %}
+      <span class="badge badge-success text-sm"><i data-lucide="circle-check" class="lucide w-4 h-4"></i> Resolution executed</span>
+      {% elif case.status in ('Rejected','Escalated') %}
+      <span class="badge {{ 'badge-danger' if case.status=='Rejected' else 'badge-warn' }}">{{ case.status }}</span>
+      {% else %}
+      <button id="btn-approve" class="btn-primary" {% if not case.recommendation %}disabled{% endif %}><i data-lucide="shield-check" class="lucide w-4 h-4"></i> Approve Resolution</button>
+      <button id="btn-reject" class="btn-ghost" {% if not case.recommendation %}disabled{% endif %}>Reject</button>
+      <button id="btn-escalate" class="btn-ghost" {% if not case.recommendation %}disabled{% endif %}>Escalate</button>
+      {% endif %}
+    </div>
+  </div>
+
+  <div id="resolution-running" class="hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm">
+    <h3 class="font-bold mb-4 flex items-center gap-2"><i data-lucide="loader" class="lucide w-5 h-5 animate-spin"></i> Resolution in Progress</h3>
+    <div id="resolution-steps" class="space-y-2 text-sm font-medium"></div>
+  </div>
+
+  <div id="resolution-done" class="hidden rounded-2xl border border-emerald-200 dark:border-emerald-500/30 bg-white dark:bg-slate-900 p-8 text-center shadow-sm">
+    <div class="mx-auto mb-4 h-16 w-16 rounded-2xl bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+      <i data-lucide="badge-check" class="lucide w-9 h-9"></i>
+    </div>
+    <h3 class="text-2xl font-extrabold">Case Resolved</h3>
+    <p class="text-slate-500 mt-1"><span class="font-mono font-bold">{{ case.case_ref }}</span> · {{ case.amount|money }}</p>
+    <div class="mt-6 grid sm:grid-cols-2 gap-3 max-w-xl mx-auto text-left">
+      <div class="rounded-xl bg-slate-50 dark:bg-slate-800/60 p-3"><div class="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">Resolution</div><div id="res-text" class="font-semibold mt-1">{{ case.recommendation or 'Settlement ledger updated.' }}</div></div>
+      <div class="rounded-xl bg-slate-50 dark:bg-slate-800/60 p-3"><div class="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">Resolution Time</div><div class="font-semibold mt-1">2m 14s</div></div>
+    </div>
+    <p class="text-[11px] text-slate-400 mt-4">Simulated action only — no real financial systems were modified.</p>
+    <div class="mt-6"><a href="{{ url_for('roi') }}" class="btn-primary"><i data-lucide="trending-up" class="lucide w-4 h-4"></i> See ROI Impact</a></div>
+  </div>
+</div>
+
+<!-- AUDIT TRAIL -->
+<div class="tab-panel hidden" data-panel="audit">
+  <div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm p-6">
+    <h3 class="font-bold mb-5">Audit Trail</h3>
+    <div id="audit-list" class="space-y-0">
+      {% for ev in events %}
+      <div class="flex gap-3 items-start py-2.5 border-b border-slate-100 dark:border-slate-800/60 last:border-0">
+        <span class="font-mono text-xs text-slate-400 pt-0.5 w-16">{{ ev.created_at.split('T')[1][:8] if ev.created_at else '' }}</span>
+        <span class="mt-1.5 h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0"></span>
+        <span class="text-sm text-slate-700 dark:text-slate-200"><span class="font-bold">{{ ev.event_type|replace('_',' ')|title }}</span>{% if ev.detail %} — {{ ev.detail }}{% endif %}</span>
+      </div>
+      {% else %}
+      <p class="text-sm text-slate-400">No events recorded for this case yet.</p>
+      {% endfor %}
+    </div>
+    <div class="mt-4 text-[11px] text-slate-400 font-medium">Every investigation and human-approved action is recorded for compliance.</div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+  window.CASE_REF = '{{ case.case_ref }}';
+  window.CASE_STATUS = '{{ case.status }}';
+</script>
+{% endblock %}

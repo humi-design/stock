@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Exceptions · HUMISENSE{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between mb-6 flex-wrap gap-3">
+  <div>
+    <h1 class="text-2xl font-extrabold tracking-tight">Exceptions</h1>
+    <p class="text-sm text-slate-500">{{ summary['exceptions'] if summary else 326 }} detected · prioritized by severity</p>
+  </div>
+  <div id="severity-filters" class="flex items-center gap-1.5 flex-wrap">
+    {% set sevs = [('all','All'),('critical','Critical'),('high','High'),('medium','Medium'),('low','Low')] %}
+    {% for val, label in sevs %}
+    <button class="filter-pill {% if active_severity == val %}active{% endif %}" data-filter="{{ val }}">{{ label }}</button>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
+  <table class="w-full text-sm">
+    <thead>
+      <tr class="text-left text-[11px] uppercase tracking-wider text-slate-400 border-b border-slate-200 dark:border-slate-800">
+        <th class="px-4 py-3 font-semibold">Case</th>
+        <th class="px-4 py-3 font-semibold">Exception</th>
+        <th class="px-4 py-3 font-semibold text-right">Amount</th>
+        <th class="px-4 py-3 font-semibold">Severity</th>
+        <th class="px-4 py-3 font-semibold">AI Confidence</th>
+        <th class="px-4 py-3 font-semibold">Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for c in cases %}
+      <tr class="border-b border-slate-100 dark:border-slate-800/60 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors cursor-pointer case-row" data-href="{{ url_for('case_detail', case_ref=c.case_ref) }}">
+        <td class="px-4 py-3 font-bold font-mono text-[13px]">{{ c.case_ref }}</td>
+        <td class="px-4 py-3 text-slate-600 dark:text-slate-300">{{ reconciliation_label(c.case_type) }}</td>
+        <td class="px-4 py-3 text-right font-semibold">{{ c.amount|money }}</td>
+        <td class="px-4 py-3"><span class="badge {{ severity_badge_cls(c.severity) }}">{{ c.severity }}</span></td>
+        <td class="px-4 py-3">
+          <div class="flex items-center gap-2">
+            <div class="w-20 h-1.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden"><div class="h-full rounded-full {{ 'bg-emerald-500' if c.confidence and c.confidence >= 95 else 'bg-indigo-500' }}" style="width:{{ c.confidence or 0 }}%"></div></div>
+            <span class="text-xs font-bold text-slate-500">{{ c.confidence|int if c.confidence else 0 }}%</span>
+          </div>
+        </td>
+        <td class="px-4 py-3"><span class="badge {{ status_cls(c.status) }}">{{ c.status }}</span></td>
+      </tr>
+      {% else %}
+      <tr><td colspan="6" class="px-4 py-12 text-center text-slate-400">
+        No cases yet. Run a reconciliation first.
+        <a href="{{ url_for('dashboard') }}" class="text-indigo-600 dark:text-indigo-400 font-semibold">Run Reconciliation →</a>
+      </td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+  const RECONCILIATION_LABELS = {
+    'MISSING_TRANSACTION':'Missing Transaction','DUPLICATE_TRANSACTION':'Duplicate',
+    'AMOUNT_MISMATCH':'Amount Mismatch','DATE_MISMATCH':'Date Mismatch',
+    'ACCOUNT_MISMATCH':'Account Mismatch','STATUS_MISMATCH':'Status Mismatch',
+    'SETTLEMENT_MISMATCH':'Settlement Mismatch','UNMATCHED_TRANSACTION':'Unmatched Transaction'
+  };
+  function reconciliation_label(t){ return RECONCILIATION_LABELS[t] || t; }
+</script>
+{% endblock %}

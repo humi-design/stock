@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}HUMISENSE · AI Operations Workforce{% endblock %}
+{% block content %}
+<!-- HERO -->
+<section class="pt-14 pb-10 text-center relative">
+  <div class="mx-auto max-w-4xl">
+    <div class="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-500/30 rounded-full px-3.5 py-1.5 mb-6 bg-indigo-50/70 dark:bg-indigo-500/10">
+      <span class="h-1.5 w-1.5 rounded-full bg-indigo-500 animate-pulse"></span>
+      Built for financial operations teams
+    </div>
+    <h1 class="text-5xl md:text-6xl font-extrabold tracking-tight leading-[1.05]">
+      Your systems detect the problem.<br>
+      <span class="text-indigo-600 dark:text-indigo-400">Humisense resolves it.</span>
+    </h1>
+    <p class="mt-6 text-xl text-slate-600 dark:text-slate-300 max-w-2xl mx-auto">
+      AI-powered investigation and resolution of repetitive financial operations work.
+    </p>
+    <div class="mt-9 flex flex-wrap items-center justify-center gap-3">
+      <a href="{{ url_for('dashboard') }}" class="btn-primary">
+        <i data-lucide="play" class="lucide w-5 h-5"></i>
+        Start Live Demo
+      </a>
+      <a href="#how-it-works" class="btn-secondary">
+        <i data-lucide="eye" class="lucide w-5 h-5"></i>
+        See How It Works
+      </a>
+    </div>
+    <p class="mt-5 text-sm text-slate-400 dark:text-slate-500 font-medium">
+      Demo-first · No API key required · Fully offline
+    </p>
+  </div>
+</section>
+
+<!-- CONTROL CENTER TEASER -->
+{% if summary %}
+<section class="mt-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-lg shadow-slate-200/50 dark:shadow-none p-6 sm:p-8">
+  <div class="flex items-center justify-between mb-5">
+    <div>
+      <h2 class="text-lg font-bold">AI Operations Control Center</h2>
+      <p class="text-sm text-slate-500">Latest reconciliation run</p>
+    </div>
+    <a href="{{ url_for('dashboard') }}" class="text-sm font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">Open →</a>
+  </div>
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div class="stat-tile"><div class="stat-label">Records Processed</div><div class="stat-value">{{ summary.processed }}</div></div>
+    <div class="stat-tile"><div class="stat-label">Matched</div><div class="stat-value text-emerald-600 dark:text-emerald-400">{{ summary.matched }}</div></div>
+    <div class="stat-tile"><div class="stat-label">Exceptions</div><div class="stat-value text-rose-600 dark:text-rose-400">{{ summary['exceptions'] }}</div></div>
+    <div class="stat-tile"><div class="stat-label">Cases</div><div class="stat-value text-amber-600 dark:text-amber-400">{{ summary.case_count }}</div></div>
+  </div>
+</section>
+{% endif %}
+
+<!-- HOW IT WORKS -->
+<section id="how-it-works" class="py-14">
+  <h2 class="text-2xl font-bold text-center mb-2">Systems detect. Humisense investigates. Your team decides.</h2>
+  <p class="text-center text-slate-500 mb-10 max-w-2xl mx-auto">
+    The expensive repetitive work happens <em>after</em> detection. Humisense automates that investigation while keeping humans in control of high-impact actions.
+  </p>
+  <div class="grid md:grid-cols-3 gap-6">
+    <div class="feature-card"><div class="feature-icon"><i data-lucide="scan-search" class="lucide w-6 h-6"></i></div><h3 class="font-bold text-lg">1 · Detect</h3><p class="text-sm text-slate-500 mt-1">Your existing systems already flag mismatches across bank, ledger and settlement records.</p></div>
+    <div class="feature-card"><div class="feature-icon"><i data-lucide="bot" class="lucide w-6 h-6"></i></div><h3 class="font-bold text-lg">2 · Investigate</h3><p class="text-sm text-slate-500 mt-1">Humisense checks every system, compares records, finds evidence and determines the probable root cause.</p></div>
+    <div class="feature-card"><div class="feature-icon"><i data-lucide="shield-check" class="lucide w-6 h-6"></i></div><h3 class="font-bold text-lg">3 · Control</h3><p class="text-sm text-slate-500 mt-1">Humans approve high-risk actions. Approved actions execute with a complete audit trail.</p></div>
+  </div>
+</section>
+
+<!-- NUMBERS -->
+<section class="py-10 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm p-8">
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+    <div><div class="text-3xl font-extrabold text-indigo-600 dark:text-indigo-400">80%</div><div class="text-sm text-slate-500 mt-1">Potential handling-time reduction</div></div>
+    <div><div class="text-3xl font-extrabold text-indigo-600 dark:text-indigo-400">70%</div><div class="text-sm text-slate-500 mt-1">Estimated AI investigation rate</div></div>
+    <div><div class="text-3xl font-extrabold text-indigo-600 dark:text-indigo-400">100%</div><div class="text-sm text-slate-500 mt-1">Human approval on write actions</div></div>
+    <div><div class="text-3xl font-extrabold text-indigo-600 dark:text-indigo-400">24/7</div><div class="text-sm text-slate-500 mt-1">Always-on investigation</div></div>
+  </div>
+  <p class="text-center text-[11px] text-slate-400 mt-6 font-medium">DEMO ESTIMATE — directional illustration, not a guarantee of savings.</p>
+</section>
+
+<!-- CLOSE -->
+<section class="py-14 text-center">
+  <h2 class="text-3xl font-extrabold tracking-tight">Give us one workflow.<br>We'll show you what Humisense can automate.</h2>
+  <p class="mt-4 text-slate-500 max-w-xl mx-auto">"Start with one repetitive operational workflow. Measure the manual effort. Then scale."</p>
+  <div class="mt-8 flex flex-wrap items-center justify-center gap-3">
+    <a href="{{ url_for('lead') }}" class="btn-primary"><i data-lucide="rocket" class="lucide w-5 h-5"></i> Book a 30-Day Pilot</a>
+    <a href="{{ url_for('dashboard') }}" class="btn-secondary">Start Live Demo</a>
+  </div>
+</section>
+{% endblock %}

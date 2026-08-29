@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block title %}ROI · HUMISENSE{% endblock %}
+{% block content %}
+<div class="mb-6">
+  <h1 class="text-2xl font-extrabold tracking-tight">ROI Calculator</h1>
+  <p class="text-sm text-slate-500">Estimate the operational capacity Humisense could release — <span class="font-semibold text-amber-600 dark:text-amber-400">an estimate, not a guarantee of savings.</span></p>
+</div>
+
+<!-- What just happened -->
+<section class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm p-6 mb-8" id="what-just-happened">
+  <h2 class="font-extrabold text-xl mb-5">What Just Happened?</h2>
+  <div class="grid md:grid-cols-2 gap-6">
+    <div class="rounded-xl bg-slate-50 dark:bg-slate-800/60 p-5">
+      <div class="text-[11px] uppercase tracking-wider font-bold text-slate-400 mb-3">Before Humisense</div>
+      <ul class="space-y-2 text-sm text-slate-600 dark:text-slate-300">
+        <li class="flex gap-2"><i data-lucide="x" class="lucide w-4 h-4 text-rose-400 shrink-0 mt-0.5"></i>Manual investigation</li>
+        <li class="flex gap-2"><i data-lucide="x" class="lucide w-4 h-4 text-rose-400 shrink-0 mt-0.5"></i>15 minutes estimated handling time</li>
+        <li class="flex gap-2"><i data-lucide="x" class="lucide w-4 h-4 text-rose-400 shrink-0 mt-0.5"></i>Multiple systems opened by hand</li>
+        <li class="flex gap-2"><i data-lucide="x" class="lucide w-4 h-4 text-rose-400 shrink-0 mt-0.5"></i>Manual evidence gathering</li>
+        <li class="flex gap-2"><i data-lucide="x" class="lucide w-4 h-4 text-rose-400 shrink-0 mt-0.5"></i>Manual resolution preparation</li>
+      </ul>
+    </div>
+    <div class="rounded-xl bg-indigo-50/60 dark:bg-indigo-500/10 p-5">
+      <div class="text-[11px] uppercase tracking-wider font-bold text-indigo-400 mb-3">After Humisense</div>
+      <ul class="space-y-2 text-sm text-slate-700 dark:text-slate-200">
+        <li class="flex gap-2"><i data-lucide="check" class="lucide w-4 h-4 text-emerald-500 shrink-0 mt-0.5"></i>Automated investigation</li>
+        <li class="flex gap-2"><i data-lucide="check" class="lucide w-4 h-4 text-emerald-500 shrink-0 mt-0.5"></i>Evidence gathered automatically</li>
+        <li class="flex gap-2"><i data-lucide="check" class="lucide w-4 h-4 text-emerald-500 shrink-0 mt-0.5"></i>Root cause identified</li>
+        <li class="flex gap-2"><i data-lucide="check" class="lucide w-4 h-4 text-emerald-500 shrink-0 mt-0.5"></i>Resolution prepared</li>
+        <li class="flex gap-2"><i data-lucide="check" class="lucide w-4 h-4 text-emerald-500 shrink-0 mt-0.5"></i>Human approval retained</li>
+      </ul>
+    </div>
+  </div>
+  <div class="mt-6 flex items-center gap-4 flex-wrap">
+    <div class="flex items-center gap-3">
+      <span class="text-slate-400 line-through font-bold text-lg" id="before-time">15 min</span>
+      <span class="text-slate-400">→</span>
+      <span class="text-emerald-600 dark:text-emerald-400 font-extrabold text-2xl" id="after-time">3 min</span>
+    </div>
+    <span class="badge badge-success text-sm">Potential time reduction: <span id="reduction-pct">80%</span></span>
+    <span class="badge badge-neutral">DEMO ESTIMATE</span>
+  </div>
+</section>
+
+<!-- Calculator -->
+<section class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm p-6 mb-8">
+  <h2 class="font-extrabold text-lg mb-5">Interactive Calculator</h2>
+  <div class="grid lg:grid-cols-2 gap-8">
+    <div class="space-y-4">
+      <div>
+        <label class="field-label">Monthly exceptions</label>
+        <input id="in-monthly" type="number" class="input" value="30000">
+      </div>
+      <div>
+        <label class="field-label">Average handling time (minutes)</label>
+        <input id="in-handling" type="number" class="input" value="15">
+      </div>
+      <div>
+        <label class="field-label">Operations hourly cost (₹)</label>
+        <input id="in-hourly" type="number" class="input" value="500">
+      </div>
+      <div>
+        <label class="field-label">Estimated AI investigation rate (%)</label>
+        <input id="in-rate" type="number" class="input" value="70" min="0" max="100">
+      </div>
+      <div>
+        <label class="field-label">Human review time (minutes)</label>
+        <input id="in-review" type="number" class="input" value="3">
+      </div>
+      <button id="btn-calc" class="btn-primary w-full justify-center"><i data-lucide="calculator" class="lucide w-4 h-4"></i> Estimate</button>
+    </div>
+    <div>
+      <div class="rounded-xl bg-slate-50 dark:bg-slate-800/60 p-5 space-y-4" id="calc-results">
+        <div class="flex justify-between"><span class="text-slate-500 text-sm">Current monthly manual hours</span><span class="font-bold" id="r-hours">—</span></div>
+        <div class="flex justify-between"><span class="text-slate-500 text-sm">Potential hours released</span><span class="font-bold text-emerald-600" id="r-released">—</span></div>
+        <div class="flex justify-between"><span class="text-slate-500 text-sm">Estimated monthly operational cost</span><span class="font-bold" id="r-cost">—</span></div>
+        <div class="flex justify-between"><span class="text-slate-500 text-sm">Estimated capacity released <span class="text-[11px]">(hrs/mo)</span></span><span class="font-bold text-indigo-600" id="r-capacity">—</span></div>
+        <div class="flex justify-between"><span class="text-slate-500 text-sm">Estimated annual capacity</span><span class="font-bold" id="r-annual">—</span></div>
+        <div class="pt-3 border-t border-slate-200 dark:border-slate-700 text-[11px] text-slate-400 font-medium">ESTIMATE — directional illustration. Actual results depend on your data and workflows.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Infrastructure note -->
+<section class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm p-6">
+  <h2 class="font-extrabold text-lg mb-4">Scale the same workflow</h2>
+  <p class="text-sm text-slate-500 max-w-3xl">
+    The reconciliation workflow you just saw runs the same way at 30,000 exceptions a month. Detection already exists in your stack —
+    Humisense automates the investigation, keeps your team in control of approvals, and records everything for compliance.
+  </p>
+  <div class="mt-6"><a href="{{ url_for('lead') }}" class="btn-primary"><i data-lucide="rocket" class="lucide w-4 h-4"></i> Book a 30-Day Pilot</a></div>
+</section>
+{% endblock %}

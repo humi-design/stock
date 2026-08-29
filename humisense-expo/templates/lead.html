@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Book a Pilot · HUMISENSE{% endblock %}
+{% block content %}
+<div class="max-w-2xl mx-auto">
+  <div class="text-center mb-8">
+    <h1 class="text-3xl font-extrabold tracking-tight">Give us one workflow.</h1>
+    <p class="text-slate-500 mt-2">We'll show you what Humisense can automate. Start with one repetitive operational workflow, measure the manual effort, then scale.</p>
+  </div>
+  <form method="post" action="{{ url_for('lead') }}" class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm p-6 space-y-4">
+    <div class="grid sm:grid-cols-2 gap-4">
+      <div><label class="field-label">Name</label><input name="name" required class="input" placeholder="Your name"></div>
+      <div><label class="field-label">Company</label><input name="company" required class="input" placeholder="Company name"></div>
+      <div><label class="field-label">Work Email</label><input name="email" type="email" required class="input" placeholder="you@company.com"></div>
+      <div><label class="field-label">Phone</label><input name="phone" class="input" placeholder="+91 …"></div>
+    </div>
+    <div><label class="field-label">Role</label><input name="role" class="input" placeholder="e.g. Head of Operations, CFO, COO"></div>
+    <div>
+      <label class="field-label">Company type</label>
+      <select name="company_type" class="input">
+        <option>Stock Broker</option>
+        <option>Trading Platform</option>
+        <option>Fintech</option>
+        <option>Bank</option>
+        <option>Other</option>
+      </select>
+    </div>
+    <div>
+      <label class="field-label">What process would you like to automate?</label>
+      <select name="process" class="input">
+        <option>Reconciliation</option>
+        <option>KYC</option>
+        <option>AML</option>
+        <option>Settlement</option>
+        <option>Complaints</option>
+        <option>Compliance</option>
+        <option>Other</option>
+      </select>
+    </div>
+    <button type="submit" class="btn-primary w-full justify-center"><i data-lucide="send" class="lucide w-4 h-4"></i> Request Pilot</button>
+    <p class="text-[11px] text-slate-400 text-center">Your details are stored securely for follow-up only. Demo data is fully synthetic.</p>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en" class="{% if request.cookies.get('theme') == 'dark' %}dark{% endif %}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}HUMISENSE · AI Operations Workforce{% endblock %}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'] },
+          colors: {
+            brand: { 50:'#eef4ff', 100:'#dbe7fe', 500:'#2563eb', 600:'#1d4ed8', 700:'#1e40af' },
+            ink:   { DEFAULT:'#0f172a', soft:'#475569' },
+          },
+        }
+      }
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script>
+    lucide.createIcons();
+  </script>
+</head>
+<body class="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
+  <header class="sticky top-0 z-40 border-b border-slate-200/70 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 backdrop-blur">
+    <div class="mx-auto max-w-[1440px] px-5 flex items-center justify-between h-16">
+      <div class="flex items-center gap-3">
+        <a href="{{ url_for('index') }}" class="flex items-center gap-3">
+          <div class="h-9 w-9 rounded-lg bg-indigo-600 dark:bg-indigo-500 flex items-center justify-center shadow-sm">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="12" y1="8" x2="12" y2="2"/></svg>
+          </div>
+          <div class="leading-tight">
+            <div class="font-extrabold tracking-tight text-[15px]">HUMISENSE</div>
+            <div class="text-[10px] font-medium tracking-[0.14em] text-slate-500 dark:text-slate-400 uppercase">AI Operations Workforce</div>
+          </div>
+        </a>
+      </div>
+      <nav class="hidden lg:flex items-center gap-1 text-sm font-medium">
+        {% set nav = [
+          ('index', 'Overview'),
+          ('dashboard', 'Control Center'),
+          ('exceptions', 'Cases'),
+          ('roi', 'ROI'),
+          ('agents', 'Agents'),
+        ] %}
+        {% for endpoint, label in nav %}
+        <a href="{{ url_for(endpoint) }}" class="px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 {% if request.endpoint == endpoint or (endpoint=='exceptions' and request.endpoint=='case_detail') %}text-indigo-600 dark:text-indigo-400{% else %}text-slate-600 dark:text-slate-300{% endif %}">
+          {{ label }}
+        </a>
+        {% endfor %}
+      </nav>
+      <div class="flex items-center gap-2.5">
+        <span id="provider-pill" class="hidden md:inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full border border-amber-300/60 bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30">
+          <i data-lucide="bot" class="lucide w-3.5 h-3.5"></i>
+          <span id="provider-label">{{ current_provider_label() }}</span>
+          <span class="animate-pulse text-amber-500">●</span>
+        </span>
+        <button id="theme-toggle" class="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-300" title="Toggle theme">
+          <i data-lucide="moon" class="lucide w-5 h-5"></i>
+        </button>
+        <a href="{{ url_for('lead') }}" class="inline-flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-4 py-2 rounded-lg shadow-sm transition-colors">
+          BOOK PILOT
+          <i data-lucide="arrow-right" class="lucide w-4 h-4"></i>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  {% with messages = get_flashed_messages() %}
+  {% if messages %}
+  <div class="mx-auto max-w-[1440px] px-5 pt-4">
+    {% for m in messages %}
+    <div class="rounded-xl border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-800 dark:text-emerald-200 px-4 py-3 text-sm font-medium">
+      {{ m }}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+  {% endwith %}
+
+  <main class="mx-auto max-w-[1440px] px-5 py-8">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Modal root -->
+  <div id="modal-root"></div>
+
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/demo.js') }}"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>
